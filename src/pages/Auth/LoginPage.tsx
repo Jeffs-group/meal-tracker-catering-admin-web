@@ -58,8 +58,8 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const { setAuth, isAuthenticated } = useAuthStore();
 
-  const [email, setEmail] = useState("superadmin@jeffscatering.com");
-  const [password, setPassword] = useState("SuperAdmin@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
