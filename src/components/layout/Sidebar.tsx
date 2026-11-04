@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   Users,
   Shield,
-  UtensilsCrossed,
   X,
   LogOut,
   BarChart3,
@@ -72,15 +71,17 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Brand Header */}
         <div className="flex h-16 items-center justify-between border-b border-[#222222] px-5">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#DEC067] to-[#C9A227] text-black shadow-xs font-bold">
-              <UtensilsCrossed className="h-5 w-5" />
-            </div>
+            <img
+              src="/jeffs-group-emblem.png"
+              alt="Jeffs Group Emblem"
+              className="h-9 w-9 object-contain shrink-0"
+            />
             <div>
               <h2 className="text-sm font-bold tracking-tight text-white leading-tight">
-                Jeffs Group
+                JEFFS GROUP
               </h2>
-              <p className="text-[10px] uppercase tracking-wider text-[#DEC067] font-semibold">
-                Meal Tracker
+              <p className="text-[9px] uppercase tracking-wider text-[#DEC067] font-semibold">
+                OF COMPANIES
               </p>
             </div>
           </div>

@@ -20,39 +20,8 @@ import { login, logout as logoutApi } from "@/api/auth.api";
 import { ApiError } from "@/lib/apiError";
 import { isEventAdminUser } from "@/utils/authGuards";
 import type { AuthUser } from "@/types/auth";
-
-// Monogram Logo Component matching Jeffs Group identity
-export const JeffsGroupLogo: React.FC<{ className?: string }> = ({
-  className = "h-8 w-8",
-}) => (
-  <svg
-    viewBox="0 0 40 40"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-    className={className}
-    aria-hidden="true"
-  >
-    {/* Monogram emblem in gold */}
-    <path
-      d="M13 10H27"
-      stroke="#C9A227"
-      strokeWidth="3.2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M16 10V23.5C16 26.8 13.3 29.5 10 29.5C6.7 29.5 4 26.8 4 23.5V21"
-      stroke="#C9A227"
-      strokeWidth="3.2"
-      strokeLinecap="round"
-    />
-    <path
-      d="M24 10V23.5C24 26.8 26.7 29.5 30 29.5C33.3 29.5 36 26.8 36 23.5V21"
-      stroke="#C9A227"
-      strokeWidth="3.2"
-      strokeLinecap="round"
-    />
-  </svg>
-);
+import { JeffsGroupLogo } from "@/components/common/JeffsGroupLogo";
+export { JeffsGroupLogo };
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -182,15 +151,15 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen w-full bg-white flex flex-col justify-center items-center px-4 sm:px-6 py-10 selection:bg-[#DEC067] selection:text-slate-900">
       <div className="w-full max-w-[420px] mx-auto space-y-7">
         {/* Brand Header */}
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center shrink-0">
-            <JeffsGroupLogo className="h-9 w-9" />
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#132130] p-2 shadow-xs shrink-0 border border-[#A4852F]/20">
+            <JeffsGroupLogo variant="emblem" className="h-full w-full" />
           </div>
           <div>
-            <h2 className="text-sm font-extrabold uppercase tracking-[0.14em] text-slate-900 leading-tight">
+            <h2 className="text-base font-extrabold uppercase tracking-[0.14em] text-slate-900 leading-tight">
               JEFFS GROUP
             </h2>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400 mt-0.5">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#A4852F] mt-0.5">
               OF COMPANIES
             </p>
           </div>
@@ -202,8 +171,8 @@ export const LoginPage: React.FC = () => {
             Welcome Back
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
-            Login to your Jeffs Group Event Admin Portal to manage registrations and
-            team information.
+            Login to your Jeffs Group Catering Super Admin Portal to manage matchday meals,
+            credentials, and live distribution.
           </p>
         </div>
 
