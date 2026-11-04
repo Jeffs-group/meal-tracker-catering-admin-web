@@ -245,7 +245,7 @@ export function useUserMutations() {
       fullName: string;
       email: string;
       phone?: string;
-      roleId: CateringUser["roleId"];
+      roleId: CateringUser["roleId"] | string;
       permissions?: string[];
     }) => createCateringUser(data),
     onSuccess: () => {
@@ -259,7 +259,7 @@ export function useUserMutations() {
       fullName: string;
       email: string;
       phone?: string;
-      roleId: CateringUser["roleId"];
+      roleId: CateringUser["roleId"] | string;
     }) => inviteUser(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["catering", "users"] });

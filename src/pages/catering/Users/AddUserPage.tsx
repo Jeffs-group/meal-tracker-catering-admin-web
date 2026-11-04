@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { FormSection } from "@/components/catering/FormSection";
 import { useUserMutations } from "@/hooks/useCatering";
+import { useSuperRolesList } from "@/hooks/useSuperAdminApi";
 import { ROUTES } from "@/constants/routes";
 import { cn } from "@/utils/cn";
 import type { CateringRoleKey } from "@/types/catering.types";
@@ -101,10 +102,12 @@ const MODULES_CONFIG: PermissionModuleConfig[] = [
 export const AddUserPage: React.FC = () => {
   const navigate = useNavigate();
   const { create } = useUserMutations();
+  const { data: superRoles } = useSuperRolesList();
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
   // Direct Interactive Module Permissions State
@@ -178,9 +181,15 @@ export const AddUserPage: React.FC = () => {
   };
 
   const handleApplyPreset = (preset: "operator" | "admin" | "all" | "clear") => {
-    if (preset === "all") {
+    if (preset === "all" || preset === "admin") {
       const all = MODULES_CONFIG.flatMap((m) => m.actions.map((a) => a.key));
       setSelectedPermissions(all);
+      const adminRole = superRoles?.find(
+        (r) =>
+          r.name.toLowerCase().includes("super") ||
+          r.name.toLowerCase().includes("admin"),
+      );
+      if (adminRole) setSelectedRoleId(adminRole.id);
     } else if (preset === "clear") {
       setSelectedPermissions([]);
     } else if (preset === "operator") {
@@ -190,9 +199,12 @@ export const AddUserPage: React.FC = () => {
         "meals:verify",
         "meals:provide",
       ]);
-    } else if (preset === "admin") {
-      const all = MODULES_CONFIG.flatMap((m) => m.actions.map((a) => a.key));
-      setSelectedPermissions(all);
+      const operatorRole = superRoles?.find(
+        (r) =>
+          r.name.toLowerCase().includes("operator") ||
+          r.name.toLowerCase().includes("meal"),
+      );
+      if (operatorRole) setSelectedRoleId(operatorRole.id);
     }
   };
 
@@ -229,7 +241,7 @@ export const AddUserPage: React.FC = () => {
         fullName: fullName.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim() || undefined,
-        roleId: computedRoleKey,
+        roleId: selectedRoleId || computedRoleKey,
         permissions: selectedPermissions,
       });
       navigate(ROUTES.CATERING.USERS);
@@ -395,10 +407,55 @@ export const AddUserPage: React.FC = () => {
         {/* SECTION 02: Interactive Module Permissions */}
         <FormSection
           sectionNumber="02"
-          title="Module Permissions"
-          description="Directly grant granular access privileges across operational modules."
+          title="Role & Module Permissions"
+          description="Assign an operational role and configure granular access privileges across modules."
         >
           <div className="space-y-5">
+            {/* Operational Role Selector */}
+            <div className="space-y-1.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                Assigned Operational Role <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={
+                  selectedRoleId ||
+                  (superRoles?.find((r) =>
+                    isSuperAdminScope
+                      ? r.name.toLowerCase().includes("super") || r.name.toLowerCase().includes("admin")
+                      : r.name.toLowerCase().includes("operator"),
+                  )?.id ?? "")
+                }
+                onChange={(e) => {
+                  const roleId = e.target.value;
+                  setSelectedRoleId(roleId);
+                  const roleObj = superRoles?.find((r) => r.id === roleId);
+                  const roleName = (roleObj?.name || "").toLowerCase();
+                  if (roleName.includes("super") || roleName.includes("admin")) {
+                    handleApplyPreset("admin");
+                  } else if (roleName.includes("operator")) {
+                    handleApplyPreset("operator");
+                  }
+                }}
+                className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 focus:outline-hidden focus:ring-1 focus:ring-[#C9A227] cursor-pointer"
+              >
+                {superRoles && superRoles.length > 0 ? (
+                  superRoles.map((role) => (
+                    <option key={role.id} value={role.id}>
+                      {role.name} {role.permissionsScope ? `— ${role.permissionsScope}` : ""}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="MEAL_OPERATOR">Meal Operator — Accreditation & Dispensation</option>
+                    <option value="SUPER_ADMIN">Super Admin — Full Administrative Privileges</option>
+                  </>
+                )}
+              </select>
+              <p className="text-[11px] text-slate-500">
+                Determines the operational privileges assigned to the user within the Super Admin portal.
+              </p>
+            </div>
+
             {/* Presets and Tier Summary Bar */}
             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">

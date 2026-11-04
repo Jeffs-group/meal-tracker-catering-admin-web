@@ -37,6 +37,8 @@ import {
 import { getPeriodState, formatIST12h, getNow } from "@/utils/cateringClock";
 import { axiosInstance } from "./axiosInstance";
 import { ApiError } from "@/lib/apiError";
+import { listSuperRoles } from "./superUsers.api";
+import type { RoleResponseDto } from "@/types/superAdminApi.types";
 
 const DELAY_MS = 100;
 
@@ -2631,11 +2633,98 @@ export async function getUserById(userId: string): Promise<CateringUser> {
   return found;
 }
 
+let cachedSuperRoles: RoleResponseDto[] | null = null;
+
+export async function fetchSuperRolesList(forceRefresh = false): Promise<RoleResponseDto[]> {
+  if (!forceRefresh && cachedSuperRoles && cachedSuperRoles.length > 0) {
+    return cachedSuperRoles;
+  }
+  try {
+    const roles = await listSuperRoles();
+    if (Array.isArray(roles) && roles.length > 0) {
+      cachedSuperRoles = roles;
+      return roles;
+    }
+  } catch (err) {
+    console.warn("Failed to fetch super roles from /api/v1/super/roles:", err);
+  }
+  return cachedSuperRoles || [];
+}
+
+export async function resolveSuperRoleId(roleIdOrKey?: string, forceRefresh = false): Promise<string> {
+  const roles = await fetchSuperRolesList(forceRefresh);
+
+  if (!roles || roles.length === 0) {
+    return roleIdOrKey || "";
+  }
+
+  const query = (roleIdOrKey || "").trim();
+
+  // 1. Direct ID / UUID match
+  if (query) {
+    const exactIdMatch = roles.find((r) => r.id === query);
+    if (exactIdMatch) return exactIdMatch.id;
+  }
+
+  const upperQuery = query.toUpperCase();
+
+  // 2. Exact match on role code
+  if (upperQuery) {
+    const codeMatch = roles.find((r) => {
+      const codeVal = typeof r.code === "string" ? r.code : (r.code as { code?: string } | undefined)?.code || "";
+      return typeof codeVal === "string" && codeVal.toUpperCase() === upperQuery;
+    });
+    if (codeMatch) return codeMatch.id;
+  }
+
+  // 3. Semantic / keyword match
+  if (upperQuery.includes("SUPER") || upperQuery.includes("ADMIN")) {
+    const adminRole = roles.find((r) => {
+      const name = (r.name || "").toLowerCase();
+      const code = (typeof r.code === "string" ? r.code : (r.code as { code?: string } | undefined)?.code || "").toLowerCase();
+      return name.includes("super") || name.includes("admin") || code.includes("admin") || code.includes("super");
+    });
+    if (adminRole) return adminRole.id;
+  }
+
+  if (upperQuery.includes("OPERATOR") || upperQuery.includes("MEAL")) {
+    const operatorRole = roles.find((r) => {
+      const name = (r.name || "").toLowerCase();
+      const code = (typeof r.code === "string" ? r.code : (r.code as { code?: string } | undefined)?.code || "").toLowerCase();
+      return name.includes("operator") || name.includes("meal") || code.includes("operator");
+    });
+    if (operatorRole) return operatorRole.id;
+  }
+
+  if (upperQuery.includes("REPORT") || upperQuery.includes("VIEWER")) {
+    const reportRole = roles.find((r) => {
+      const name = (r.name || "").toLowerCase();
+      const code = (typeof r.code === "string" ? r.code : (r.code as { code?: string } | undefined)?.code || "").toLowerCase();
+      return name.includes("report") || name.includes("viewer") || code.includes("report");
+    });
+    if (reportRole) return reportRole.id;
+  }
+
+  // 4. Case-insensitive name match
+  if (query) {
+    const nameMatch = roles.find((r) => (r.name || "").toLowerCase().includes(query.toLowerCase()));
+    if (nameMatch) return nameMatch.id;
+  }
+
+  // 5. Default fallback: prefer an operator role if available, or admin role, or the first role in the list
+  const defaultRole =
+    roles.find((r) => (r.name || "").toLowerCase().includes("operator")) ||
+    roles.find((r) => (r.name || "").toLowerCase().includes("admin")) ||
+    roles[0];
+
+  return defaultRole ? defaultRole.id : query;
+}
+
 export async function createCateringUser(data: {
   fullName: string;
   email: string;
   phone?: string;
-  roleId: CateringUser["roleId"];
+  roleId: CateringUser["roleId"] | string;
   permissions?: string[];
 }): Promise<CateringUser> {
   // Basic email validation
@@ -2653,29 +2742,50 @@ export async function createCateringUser(data: {
 
   if (isBrowser) {
     try {
-      const targetRoleId =
-        data.roleId === "SUPER_ADMIN"
-          ? "981b57d4-0aba-4a38-a979-c68b46718280"
-          : data.roleId === "MEAL_OPERATOR"
-            ? "86e90369-cc77-477f-9caf-4ae498adab63"
-            : "9a93ef3d-1f46-4cd8-a802-10999d2ab6f0";
+      let targetRoleId = await resolveSuperRoleId(data.roleId);
 
-      const res = await axiosInstance.post("/api/v1/super/users", {
-        name: data.fullName,
-        email: data.email,
-        contactNumber: data.phone,
-        roleId: targetRoleId,
-      });
+      let res;
+      try {
+        res = await axiosInstance.post("/api/v1/super/users", {
+          name: data.fullName,
+          email: data.email,
+          contactNumber: data.phone,
+          roleId: targetRoleId,
+        });
+      } catch (postErr: unknown) {
+        if (
+          postErr instanceof ApiError &&
+          (postErr.statusCode === 404 || postErr.message.toLowerCase().includes("role"))
+        ) {
+          targetRoleId = await resolveSuperRoleId(data.roleId, true);
+          res = await axiosInstance.post("/api/v1/super/users", {
+            name: data.fullName,
+            email: data.email,
+            contactNumber: data.phone,
+            roleId: targetRoleId,
+          });
+        } else {
+          throw postErr;
+        }
+      }
 
       if (res.data) {
         const u = res.data;
+        let resolvedRoleId: CateringUser["roleId"] = "SUPER_ADMIN";
+        const rName = u.role?.name || "";
+        if (rName.toLowerCase().includes("operator") || data.roleId === "MEAL_OPERATOR") {
+          resolvedRoleId = "MEAL_OPERATOR";
+        } else if (rName.toLowerCase().includes("report") || data.roleId === "REPORTS_VIEWER") {
+          resolvedRoleId = "REPORTS_VIEWER";
+        }
+
         return {
           id: u.id,
           userCode: u.userCode || `USR-${u.id.slice(0, 4)}`,
           fullName: u.name,
           email: u.email,
           phone: u.contactNumber || undefined,
-          roleId: data.roleId,
+          roleId: resolvedRoleId,
           status: "active",
           invitation: {
             status: "accepted",
@@ -2703,7 +2813,7 @@ export async function createCateringUser(data: {
     fullName: data.fullName,
     email: data.email,
     phone: data.phone,
-    roleId: data.roleId,
+    roleId: (data.roleId as CateringUser["roleId"]) || "MEAL_OPERATOR",
     status: "active",
     invitation: {
       status: "accepted",
@@ -2722,7 +2832,7 @@ export async function inviteUser(data: {
   fullName: string;
   email: string;
   phone?: string;
-  roleId: CateringUser["roleId"];
+  roleId: CateringUser["roleId"] | string;
 }): Promise<CateringUser> {
   // Basic email validation
   if (!data.email || !data.email.includes("@")) {
@@ -2739,17 +2849,30 @@ export async function inviteUser(data: {
 
   if (isBrowser) {
     try {
-      await axiosInstance.post("/api/v1/super/users/invite", {
-        name: data.fullName,
-        email: data.email,
-        contactNumber: data.phone,
-        roleId:
-          data.roleId === "SUPER_ADMIN"
-            ? "981b57d4-0aba-4a38-a979-c68b46718280"
-            : data.roleId === "MEAL_OPERATOR"
-              ? "86e90369-cc77-477f-9caf-4ae498adab63"
-              : "c6225d5b-1c1e-4e3b-ac78-79271c330453",
-      });
+      let targetRoleId = await resolveSuperRoleId(data.roleId);
+      try {
+        await axiosInstance.post("/api/v1/super/users/invite", {
+          name: data.fullName,
+          email: data.email,
+          contactNumber: data.phone,
+          roleId: targetRoleId,
+        });
+      } catch (inviteErr: unknown) {
+        if (
+          inviteErr instanceof ApiError &&
+          (inviteErr.statusCode === 404 || inviteErr.message.toLowerCase().includes("role"))
+        ) {
+          targetRoleId = await resolveSuperRoleId(data.roleId, true);
+          await axiosInstance.post("/api/v1/super/users/invite", {
+            name: data.fullName,
+            email: data.email,
+            contactNumber: data.phone,
+            roleId: targetRoleId,
+          });
+        } else {
+          throw inviteErr;
+        }
+      }
     } catch {
       // Fall through
     }
@@ -2764,7 +2887,7 @@ export async function inviteUser(data: {
     fullName: data.fullName,
     email: data.email,
     phone: data.phone,
-    roleId: data.roleId,
+    roleId: (data.roleId as CateringUser["roleId"]) || "MEAL_OPERATOR",
     status: "invitation_pending",
     invitation: {
       status: "pending",
@@ -2795,9 +2918,15 @@ export async function updateUser(
 
   if (isBrowser) {
     try {
+      let targetRoleId: string | undefined;
+      if (data.roleId) {
+        targetRoleId = await resolveSuperRoleId(data.roleId);
+      }
       await axiosInstance.patch(`/api/v1/super/users/${userId}`, {
         name: data.fullName,
         contactNumber: data.phone,
+        email: data.email,
+        ...(targetRoleId ? { roleId: targetRoleId } : {}),
       });
     } catch {
       // Fall through
