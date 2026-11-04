@@ -152,17 +152,11 @@ export const LoginPage: React.FC = () => {
       <div className="w-full max-w-[420px] mx-auto space-y-7">
         {/* Brand Header */}
         <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#132130] p-2 shadow-xs shrink-0 border border-[#A4852F]/20">
-            <JeffsGroupLogo variant="emblem" className="h-full w-full" />
-          </div>
-          <div>
-            <h2 className="text-base font-extrabold uppercase tracking-[0.14em] text-slate-900 leading-tight">
-              JEFFS GROUP
-            </h2>
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#A4852F] mt-0.5">
-              OF COMPANIES
-            </p>
-          </div>
+          <img
+            src="/jeffs-group-logo.png"
+            alt="Jeffs Group of Companies"
+            className="h-14 w-auto object-contain rounded-lg"
+          />
         </div>
 
         {/* Heading & Subtitle */}

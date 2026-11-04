@@ -34,7 +34,6 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { getManageMealsDashboard } from "@/api/manageMeals.api";
 import { logout as logoutApi } from "@/api/auth.api";
 import { isEventAdminUser } from "@/utils/authGuards";
-import { JeffsGroupLogo } from "@/components/common/JeffsGroupLogo";
 
 export const CateringLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -179,19 +178,13 @@ export const CateringLayout: React.FC = () => {
         )}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-[#222222] px-5">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#132130] border border-[#A4852F]/30 p-1.5 shadow-xs shrink-0">
-              <JeffsGroupLogo variant="emblem" className="h-full w-full" />
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-sm font-bold tracking-tight text-white leading-tight truncate">
-                JEFFS GROUP
-              </h2>
-              <p className="text-[10px] uppercase tracking-wider text-[#DEC067] font-semibold truncate">
-                {roleLabel} • {LEAGUE_SCOPE}
-              </p>
-            </div>
+        <div className="flex h-16 items-center justify-between border-b border-[#222222] px-4">
+          <div className="flex items-center gap-2.5">
+            <img
+              src="/jeffs-group-logo.png"
+              alt="Jeffs Group of Companies"
+              className="h-11 w-auto max-h-12 object-contain rounded-lg"
+            />
           </div>
           <button
             type="button"

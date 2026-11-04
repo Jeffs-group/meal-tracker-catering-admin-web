@@ -69,21 +69,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         )}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-[#222222] px-5">
-          <div className="flex items-center gap-3">
+        <div className="flex h-16 items-center justify-between border-b border-[#222222] px-4">
+          <div className="flex items-center gap-2.5">
             <img
-              src="/jeffs-group-emblem.png"
-              alt="Jeffs Group Emblem"
-              className="h-9 w-9 object-contain shrink-0"
+              src="/jeffs-group-logo.png"
+              alt="Jeffs Group of Companies"
+              className="h-11 w-auto max-h-12 object-contain rounded-lg"
             />
-            <div>
-              <h2 className="text-sm font-bold tracking-tight text-white leading-tight">
-                JEFFS GROUP
-              </h2>
-              <p className="text-[9px] uppercase tracking-wider text-[#DEC067] font-semibold">
-                OF COMPANIES
-              </p>
-            </div>
           </div>
           <button
             type="button"
