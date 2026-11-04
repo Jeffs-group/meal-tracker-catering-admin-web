@@ -178,18 +178,16 @@ export const CateringLayout: React.FC = () => {
         )}
       >
         {/* Brand Header */}
-        <div className="flex h-16 items-center justify-between border-b border-[#222222] px-4">
-          <div className="flex items-center gap-2.5">
-            <img
-              src="/jeffs-group-logo.png"
-              alt="Jeffs Group of Companies"
-              className="h-11 w-auto max-h-12 object-contain rounded-lg"
-            />
-          </div>
+        <div className="relative flex h-20 items-center justify-center border-b border-[#222222] px-4">
+          <img
+            src="/jeffs-group-logo.png"
+            alt="Jeffs Group of Companies"
+            className="h-12 w-auto max-h-14 object-contain rounded-lg"
+          />
           <button
             type="button"
             onClick={() => setSidebarOpen(false)}
-            className="rounded-lg p-1 text-slate-400 hover:text-white lg:hidden cursor-pointer"
+            className="absolute right-3 top-1/2 -translate-y-1/2 rounded-lg p-1 text-slate-400 hover:text-white lg:hidden cursor-pointer"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" />

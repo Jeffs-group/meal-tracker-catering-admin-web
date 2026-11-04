@@ -151,20 +151,20 @@ export const LoginPage: React.FC = () => {
     <div className="min-h-screen w-full bg-white flex flex-col justify-center items-center px-4 sm:px-6 py-10 selection:bg-[#DEC067] selection:text-slate-900">
       <div className="w-full max-w-[420px] mx-auto space-y-7">
         {/* Brand Header */}
-        <div className="flex items-center gap-3.5">
+        <div className="flex justify-center">
           <img
             src="/jeffs-group-logo.png"
             alt="Jeffs Group of Companies"
-            className="h-14 w-auto object-contain rounded-lg"
+            className="h-16 w-auto object-contain rounded-lg"
           />
         </div>
 
         {/* Heading & Subtitle */}
-        <div className="space-y-1.5">
+        <div className="space-y-1.5 text-center">
           <h1 className="text-[clamp(28px,2.5vw+16px,34px)] font-bold tracking-tight text-slate-900 leading-[1.2]">
             Welcome Back
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+          <p className="text-xs sm:text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
             Login to your Jeffs Group Catering Super Admin Portal to manage matchday meals,
             credentials, and live distribution.
           </p>
